@@ -4,142 +4,279 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'MusicMS') }} - @yield('title', 'Music Management')</title>
+    <title>@yield('title', 'MusicMS') — MusicMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-display { font-family: 'Playfair Display', serif; }
-        .sidebar-link.active { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; }
-        .sidebar-link:not(.active):hover { background: rgba(124,58,237,0.08); color: #7c3aed; }
-        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
-        .gradient-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%); }
-        .lyrics-container {
-            background: linear-gradient(135deg, #faf5ff, #ede9fe);
-            border-left: 4px solid #7c3aed;
-            font-family: 'Playfair Display', serif;
-            line-height: 2;
-            letter-spacing: 0.01em;
-        }
-        .audio-player::-webkit-media-controls-panel { background-color: #ede9fe; }
-        #mobile-menu { display: none; }
-        #mobile-menu.open { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.25s ease; }
+        .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
     </style>
+    @stack('styles')
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-gray-50 flex flex-col">
 
-{{-- Mobile top bar --}}
-<div class="gradient-bg lg:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50">
-    <a href="{{ route('dashboard') }}" class="text-white font-display font-bold text-xl">🎵 MusicMS</a>
-    <button onclick="document.getElementById('mobile-menu').classList.toggle('open')" class="text-white focus:outline-none">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-    </button>
-</div>
+    {{-- ===== TOP NAVIGATION BAR ===== --}}
+    <nav class="bg-gradient-to-r from-indigo-900 via-purple-900 to-violet-900 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
 
-<div class="flex min-h-screen">
-    {{-- Sidebar --}}
-    <aside id="mobile-menu" class="gradient-bg w-64 min-h-screen flex-shrink-0 lg:flex flex-col fixed lg:static top-0 left-0 z-40 lg:z-auto h-full lg:h-auto fade-in">
-        <div class="p-6 border-b border-white/10 hidden lg:block">
-            <a href="{{ route('dashboard') }}" class="text-white font-display font-bold text-2xl block">🎵 MusicMS</a>
-            <p class="text-purple-300 text-xs mt-1">Music Management System</p>
-        </div>
+                {{-- Logo --}}
+                <div class="flex items-center gap-8">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 group">
+                        <span class="text-2xl">🎵</span>
+                        <span class="font-display font-bold text-white text-xl group-hover:text-purple-300 transition-colors">MusicMS</span>
+                    </a>
 
-        {{-- User info --}}
-        <div class="px-4 py-4 border-b border-white/10">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center text-white font-bold text-sm">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                    {{-- Primary Nav Links --}}
+                    <div class="hidden md:flex items-center gap-1">
+                        <a href="{{ route('dashboard') }}"
+                           class="px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                  {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10 hover:text-white' }}">
+                            🏠 Dashboard
+                        </a>
+
+                        @auth
+                            @if(auth()->user()->hasRole('composer') || auth()->user()->hasRole('admin'))
+                                <a href="{{ route('compositions.index') }}"
+                                   class="px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                          {{ request()->routeIs('compositions.*') ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10 hover:text-white' }}">
+                                    🎼 My Compositions
+                                </a>
+                                <a href="{{ route('compositions.create') }}"
+                                   class="px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                          {{ request()->routeIs('compositions.create') ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10 hover:text-white' }}">
+                                    ➕ Upload
+                                </a>
+                            @endif
+
+                            @if(auth()->user()->hasRole('singer'))
+                                <a href="{{ route('compositions.index') }}"
+                                   class="px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                          {{ request()->routeIs('compositions.*') ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10 hover:text-white' }}">
+                                    🎵 Browse Catalog
+                                </a>
+                            @endif
+
+                            @if(auth()->user()->hasRole('admin'))
+                                <a href="{{ route('admin.users.index') }}"
+                                   class="px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                          {{ request()->routeIs('admin.*') ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10 hover:text-white' }}">
+                                    🛡️ Admin
+                                </a>
+                            @endif
+                        @endauth
+                    </div>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-white font-semibold text-sm truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-purple-300 text-xs capitalize">
-                        @foreach(auth()->user()->getRoleNames() as $role)
-                            <span class="inline-flex items-center gap-1">
-                                @if($role === 'admin') 🛡️ @elseif($role === 'composer') 🎼 @else 🎤 @endif
-                                {{ $role }}
-                            </span>
-                        @endforeach
-                    </p>
+
+                {{-- Right Side --}}
+                <div class="flex items-center gap-3">
+                    @auth
+                        {{-- Role Badge --}}
+                        <div class="hidden sm:block">
+                            @foreach(auth()->user()->getRoleNames() as $role)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+                                    @if($role === 'admin') bg-yellow-400/20 text-yellow-300 border border-yellow-400/30
+                                    @elseif($role === 'composer') bg-blue-400/20 text-blue-300 border border-blue-400/30
+                                    @else bg-green-400/20 text-green-300 border border-green-400/30
+                                    @endif">
+                                    @if($role === 'admin') 🛡️
+                                    @elseif($role === 'composer') 🎼
+                                    @else 🎤
+                                    @endif
+                                    {{ ucfirst($role) }}
+                                </span>
+                            @endforeach
+                        </div>
+
+                        {{-- User Dropdown --}}
+                        <div class="relative nav-dropdown" x-data="{ open: false }">
+                            <button
+                                onclick="this.nextElementSibling.classList.toggle('hidden')"
+                                class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-2 rounded-xl transition-all text-sm font-medium">
+                                {{-- Avatar initials --}}
+                                <span class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                </span>
+                                <span class="hidden sm:block max-w-[120px] truncate">{{ auth()->user()->name }}</span>
+                                <svg class="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            {{-- Dropdown Menu --}}
+                            <div class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
+                                 id="user-dropdown">
+
+                                {{-- User Info Header --}}
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->name }}</p>
+                                    <p class="text-xs text-gray-500 truncate mt-0.5">{{ auth()->user()->email }}</p>
+                                </div>
+
+                                {{-- Menu Items --}}
+                                <div class="py-1">
+                                    <a href="{{ route('profile.edit') }}"
+                                       class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                        <span class="text-base">👤</span>
+                                        <span>My Profile</span>
+                                    </a>
+
+                                    <a href="{{ route('dashboard') }}"
+                                       class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                        <span class="text-base">🏠</span>
+                                        <span>Dashboard</span>
+                                    </a>
+
+                                    @if(auth()->user()->hasRole('composer') || auth()->user()->hasRole('admin'))
+                                        <a href="{{ route('compositions.create') }}"
+                                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                            <span class="text-base">🎵</span>
+                                            <span>Upload Composition</span>
+                                        </a>
+                                    @endif
+                                </div>
+
+                                {{-- Logout --}}
+                                <div class="border-t border-gray-100 pt-1">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left">
+                                            <span class="text-base">🚪</span>
+                                            <span>Sign Out</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Guest buttons --}}
+                        <a href="{{ route('login') }}" class="text-purple-200 hover:text-white text-sm font-medium transition-colors px-3 py-2">
+                            Sign In
+                        </a>
+                        <a href="{{ route('register') }}" class="bg-white text-purple-900 hover:bg-purple-50 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md">
+                            Register
+                        </a>
+                    @endauth
+
+                    {{-- Mobile menu button --}}
+                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                            class="md:hidden p-2 rounded-lg text-purple-200 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        {{-- Navigation --}}
-        <nav class="flex-1 px-3 py-4 space-y-1">
-            <a href="{{ route('dashboard') }}"
-               class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }} flex items-center gap-3 px-4 py-2.5 rounded-xl text-purple-100 text-sm font-medium transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                Dashboard
-            </a>
-
-            <a href="{{ route('compositions.index') }}"
-               class="sidebar-link {{ request()->routeIs('compositions.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-2.5 rounded-xl text-purple-100 text-sm font-medium transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-                Compositions
-            </a>
-
-            @role('composer|admin')
-            <a href="{{ route('compositions.create') }}"
-               class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-purple-100 text-sm font-medium transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Upload Composition
-            </a>
-            @endrole
-
-            <a href="{{ route('profile.edit') }}"
-               class="sidebar-link {{ request()->routeIs('profile.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-2.5 rounded-xl text-purple-100 text-sm font-medium transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                My Profile
-            </a>
-        </nav>
-
-        {{-- Logout --}}
-        <div class="px-3 py-4 border-t border-white/10">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="sidebar-link w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-purple-200 text-sm font-medium transition-all duration-200 hover:text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Sign Out
-                </button>
-            </form>
+        {{-- Mobile Menu --}}
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10">
+            <div class="px-4 py-3 space-y-1">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-purple-200 hover:bg-white/10 hover:text-white transition-all">🏠 Dashboard</a>
+                    <a href="{{ route('compositions.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-purple-200 hover:bg-white/10 hover:text-white transition-all">🎵 Compositions</a>
+                    <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-purple-200 hover:bg-white/10 hover:text-white transition-all">👤 My Profile</a>
+                    <form method="POST" action="{{ route('logout') }}" class="pt-2 border-t border-white/10 mt-2">
+                        @csrf
+                        <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-300 hover:bg-white/10 hover:text-red-200 transition-all">🚪 Sign Out</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-purple-200 hover:bg-white/10 hover:text-white transition-all">Sign In</a>
+                    <a href="{{ route('register') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-purple-200 hover:bg-white/10 hover:text-white transition-all">Register</a>
+                @endauth
+            </div>
         </div>
-    </aside>
+    </nav>
 
-    {{-- Main content --}}
-    <main class="flex-1 min-w-0 p-4 lg:p-8">
-        {{-- Flash messages --}}
-        @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-center gap-2 fade-in">
-                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                {{ session('success') }}
-            </div>
-        @endif
+    {{-- Flash Messages --}}
+    @if(session('success') || session('error') || session('status'))
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
+            @if(session('success'))
+                <div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl text-sm shadow-sm">
+                    <span class="text-lg">✅</span>
+                    <span>{{ session('success') }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-green-400 hover:text-green-600">✕</button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm shadow-sm">
+                    <span class="text-lg">❌</span>
+                    <span>{{ session('error') }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-red-400 hover:text-red-600">✕</button>
+                </div>
+            @endif
+            @if(session('status'))
+                <div class="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-xl text-sm shadow-sm">
+                    <span class="text-lg">ℹ️</span>
+                    <span>{{ session('status') }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-blue-400 hover:text-blue-600">✕</button>
+                </div>
+            @endif
+        </div>
+    @endif
 
-        @if(session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-2 fade-in">
-                <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                {{ session('error') }}
-            </div>
-        @endif
-
+    {{-- ===== MAIN CONTENT ===== --}}
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         @yield('content')
     </main>
-</div>
 
-{{-- Close mobile menu on outside click --}}
-<script>
-    document.addEventListener('click', function(e) {
-        const menu = document.getElementById('mobile-menu');
-        const btn = e.target.closest('button');
-        if (!btn && menu && menu.classList.contains('open') && !menu.contains(e.target)) {
-            menu.classList.remove('open');
-        }
-    });
-</script>
+    {{-- ===== FOOTER ===== --}}
+    <footer class="bg-gray-900 text-white mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="md:col-span-2">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎵</span>
+                    <span class="font-display font-bold text-white text-xl">MusicMS</span>
+                </div>
+                <p class="text-gray-400 text-sm leading-relaxed">A professional music management platform connecting composers and singers. Upload, discover, and license original compositions with ease.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Platform</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="{{ route('dashboard') }}" class="hover:text-white transition-colors">Dashboard</a></li>
+                    <li><a href="{{ route('compositions.index') }}" class="hover:text-white transition-colors">Compositions</a></li>
+                    @guest
+                        <li><a href="{{ route('login') }}" class="hover:text-white transition-colors">Sign In</a></li>
+                        <li><a href="{{ route('register') }}" class="hover:text-white transition-colors">Register</a></li>
+                    @endguest
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Account</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    @auth
+                        <li><a href="{{ route('profile.edit') }}" class="hover:text-white transition-colors">My Profile</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-gray-400 hover:text-white transition-colors">Sign Out</button>
+                            </form>
+                        </li>
+                    @else
+                        <li><a href="{{ route('login') }}" class="hover:text-white transition-colors">Sign In</a></li>
+                    @endauth
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 py-5 text-center text-sm text-gray-500">
+            <p>© {{ date('Y') }} MusicMS. All rights reserved.</p>
+            <p class="mt-1">Made with ❤️ by <a href="https://laracopilot.com/" target="_blank" class="hover:text-gray-300 transition-colors underline">LaraCopilot</a></p>
+        </div>
+    </footer>
+
+    {{-- Close dropdown when clicking outside --}}
+    <script>
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('user-dropdown');
+            const btn = dropdown ? dropdown.previousElementSibling : null;
+            if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+
+    @stack('scripts')
 </body>
 </html>

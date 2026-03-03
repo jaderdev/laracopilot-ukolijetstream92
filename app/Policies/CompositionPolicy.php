@@ -24,16 +24,16 @@ class CompositionPolicy
 
     public function update(User $user, Composition $composition): bool
     {
-        return $user->hasRole('admin') || $user->id === $composition->user_id;
+        return $user->isAdmin() || $user->id === $composition->user_id;
     }
 
     public function delete(User $user, Composition $composition): bool
     {
-        return $user->hasRole('admin') || $user->id === $composition->user_id;
+        return $user->isAdmin() || $user->id === $composition->user_id;
     }
 
     public function updateStatus(User $user, Composition $composition): bool
     {
-        return $user->hasRole('admin');
+        return $user->isAdmin();
     }
 }
