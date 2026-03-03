@@ -6,10 +6,11 @@ use App\Models\Composition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CompositionController extends Controller
 {
+    use AuthorizesRequests;
     public function index()
     {
         $user = Auth::user();
@@ -39,23 +40,23 @@ class CompositionController extends Controller
         $this->authorize('create', Composition::class);
 
         $validated = $request->validate([
-            'title'     => 'required|string|max:255',
-            'lyrics'    => 'required|string',
-            'audio'     => 'required|file|mimes:mp3,wav,ogg,aac|max:51200',
+            'title' => 'required|string|max:255',
+            'lyrics' => 'required|string',
+            'audio' => 'required|file|mimes:mp3,wav,ogg,aac|max:51200',
             'video_url' => 'nullable|url|max:500',
-            'isrc'      => 'required|string|max:50|unique:compositions,isrc',
+            'isrc' => 'required|string|max:50|unique:compositions,isrc',
         ]);
 
         $audioPath = $request->file('audio')->store('audio', 'public');
 
         Composition::create([
-            'title'     => $validated['title'],
-            'lyrics'    => $validated['lyrics'],
+            'title' => $validated['title'],
+            'lyrics' => $validated['lyrics'],
             'audio_path' => $audioPath,
             'video_url' => $validated['video_url'] ?? null,
-            'isrc'      => strtoupper($validated['isrc']),
-            'status'    => 'pending',
-            'user_id'   => Auth::id(),
+            'isrc' => strtoupper($validated['isrc']),
+            'status' => 'pending',
+            'user_id' => Auth::id(),
         ]);
 
         return redirect()->route('compositions.index')
@@ -80,18 +81,18 @@ class CompositionController extends Controller
         $this->authorize('update', $composition);
 
         $validated = $request->validate([
-            'title'     => 'required|string|max:255',
-            'lyrics'    => 'required|string',
-            'audio'     => 'nullable|file|mimes:mp3,wav,ogg,aac|max:51200',
+            'title' => 'required|string|max:255',
+            'lyrics' => 'required|string',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,aac|max:51200',
             'video_url' => 'nullable|url|max:500',
-            'isrc'      => 'required|string|max:50|unique:compositions,isrc,' . $composition->id,
+            'isrc' => 'required|string|max:50|unique:compositions,isrc,' . $composition->id,
         ]);
 
         $data = [
-            'title'     => $validated['title'],
-            'lyrics'    => $validated['lyrics'],
+            'title' => $validated['title'],
+            'lyrics' => $validated['lyrics'],
             'video_url' => $validated['video_url'] ?? null,
-            'isrc'      => strtoupper($validated['isrc']),
+            'isrc' => strtoupper($validated['isrc']),
         ];
 
         if ($request->hasFile('audio')) {
